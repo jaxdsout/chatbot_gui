@@ -1,10 +1,15 @@
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTextEdit, \
     QLineEdit, QPushButton
 import sys
+import threading
+from backend import Chatbot
+
 
 class ChatbotWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self.chatbot = Chatbot()
 
         self.setMinimumSize(700, 500)
 
@@ -14,11 +19,28 @@ class ChatbotWindow(QMainWindow):
 
         self.input_field = QLineEdit(self)
         self.input_field.setGeometry(10, 340, 480, 40)
+        self.input_field.returnPressed.connect(self.send_chat)
 
         self.button = QPushButton("Send", self)
         self.button.setGeometry(500, 340, 100, 40)
+        self.button.clicked.connect(self.send_chat)
 
         self.show()
+
+    def send_chat(self):
+        user_input = self.input_field.text().strip()
+        self.chat_area.append(f"User: {user_input} \n")
+        self.input_field.clear()
+
+        thread = threading.Thread(
+            target=self.get_bot_response,
+            args=(user_input,)
+        )
+        thread.start()
+
+    def get_bot_response(self, user_input):
+        bot_response = self.chatbot.get_response(user_input)
+        self.chat_area.append(f"Bot: {bot_response} \n")
 
 
 app = QApplication(sys.argv)
